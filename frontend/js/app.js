@@ -5,14 +5,9 @@
 (function () {
   'use strict';
 
-  // ─── API URL auto-detect ─────────────────
-  const host = window.location.hostname;
-  if (host === 'localhost' || host === '127.0.0.1' || host === '') {
-    CONFIG.API_URL = 'http://localhost:5000/api';
-  } else {
-    // ✅ UPDATE THIS after deploying to Render:
-    CONFIG.API_URL = 'https://pdfflow-api.onrender.com/api';
-  }
+  // ─── API URL ─────────────────
+  // Using relative path since backend is hosted on the same domain via Vercel serverless functions
+  CONFIG.API_URL = '/api';
 
   // ─── Detect which page we're on ──────────
   const isToolPage   = document.body.classList.contains('tool-page');

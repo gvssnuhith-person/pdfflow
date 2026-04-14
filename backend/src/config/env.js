@@ -20,7 +20,7 @@ const config = {
   get maxFileSizeBytes() {
     return this.maxFileSizeMB * 1024 * 1024;
   },
-  uploadDir: process.env.UPLOAD_DIR || './tmp/uploads',
+  uploadDir: process.env.UPLOAD_DIR || (process.env.VERCEL ? require('os').tmpdir() : './tmp/uploads'),
 
   // Rate limiting
   rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 60000,

@@ -77,36 +77,38 @@ if (!fs.existsSync(uploadDir)) {
   logger.info(`Created upload directory: ${uploadDir}`);
 }
 
-const server = app.listen(config.port, () => {
-  logger.info(`🚀 PDF Converter API running on port ${config.port}`);
-  logger.info(`   Environment: ${config.nodeEnv}`);
-  logger.info(`   CORS origins: ${config.corsOrigins.join(', ')}`);
-  logger.info(`   Max file size: ${config.maxFileSizeMB}MB`);
-  logger.info(`   Rate limit: ${config.rateLimitMax} req/${config.rateLimitWindowMs / 1000}s`);
-});
-
-// Schedule temp file cleanup every 15 minutes
-const cleanupInterval = setInterval(() => sweepTempFiles(), 15 * 60 * 1000);
-
-// ═══════════════════════════════════════
-// Graceful Shutdown
-// ═══════════════════════════════════════
-
-function shutdown(signal) {
-  logger.info(`${signal} received. Shutting down gracefully...`);
-  clearInterval(cleanupInterval);
-  server.close(() => {
-    logger.info('Server closed.');
-    process.exit(0);
+if (!process.env.VERCEL) {
+  const server = app.listen(config.port, () => {
+    logger.info(`🚀 PDF Converter API running on port ${config.port}`);
+    logger.info(`   Environment: ${config.nodeEnv}`);
+    logger.info(`   CORS origins: ${config.corsOrigins.join(', ')}`);
+    logger.info(`   Max file size: ${config.maxFileSizeMB}MB`);
+    logger.info(`   Rate limit: ${config.rateLimitMax} req/${config.rateLimitWindowMs / 1000}s`);
   });
-  // Force close after 10 seconds
-  setTimeout(() => {
-    logger.error('Forced shutdown after timeout.');
-    process.exit(1);
-  }, 10000);
-}
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+  // Schedule temp file cleanup every 15 minutes
+  const cleanupInterval = setInterval(() => sweepTempFiles(), 15 * 60 * 1000);
+
+  // ═══════════════════════════════════════
+  // Graceful Shutdown
+  // ═══════════════════════════════════════
+
+  function shutdown(signal) {
+    logger.info(`${signal} received. Shutting down gracefully...`);
+    clearInterval(cleanupInterval);
+    server.close(() => {
+      logger.info('Server closed.');
+      process.exit(0);
+    });
+    // Force close after 10 seconds
+    setTimeout(() => {
+      logger.error('Forced shutdown after timeout.');
+      process.exit(1);
+    }, 10000);
+  }
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}
 
 module.exports = app;
