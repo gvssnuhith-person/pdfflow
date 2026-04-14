@@ -1,0 +1,17 @@
+# Render deployment configuration
+services:
+  - type: web
+    name: pdf-converter-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGINS
+        sync: false
+      - key: MAX_FILE_SIZE_MB
+        value: 50
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 30

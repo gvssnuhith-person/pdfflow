@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Convert your files to PDF online — free, fast, and secure. No sign-up required." />
+  <meta name="theme-color" content="#0d0d1f" />
+  <title>PDF Converter — PDFFlow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>" />
+</head>
+<body class="tool-page">
+
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">
+        <span class="logo-icon">📄</span>
+        <span class="logo-text">PDF<span class="logo-accent">Flow</span></span>
+      </a>
+      <nav class="header-nav">
+        <a href="index.html" class="nav-link">← All Tools</a>
+      </nav>
+      <div class="header-actions">
+        <span class="badge" id="tool-badge">Converter</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main tool-main">
+
+    <!-- Tool Hero -->
+    <section class="tool-hero">
+      <div class="tool-hero-icon" id="tool-icon">⚡</div>
+      <h1 class="tool-hero-title" id="tool-title">Convert to PDF</h1>
+      <p class="tool-hero-sub" id="tool-sub">Drop your file below and we'll convert it instantly</p>
+    </section>
+
+    <!-- Upload Zone -->
+    <section class="upload-section" id="upload-section">
+      <div class="upload-zone" id="upload-zone" tabindex="0" role="button" aria-label="Upload a file">
+        <input type="file" id="file-input" class="file-input" />
+        <div class="upload-zone-inner">
+          <div class="upload-icon-wrap">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p class="upload-main-text"><strong>Click to select</strong> or drag &amp; drop</p>
+          <p class="upload-sub-text" id="upload-hint">Supports all common file formats</p>
+          <div class="upload-formats" id="upload-formats">
+            <!-- Populated by JS -->
+          </div>
+          <p class="upload-limit">Max 50MB per file</p>
+        </div>
+      </div>
+
+      <!-- Mobile button -->
+      <button class="mobile-upload-btn" id="mobile-upload-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Choose File
+      </button>
+    </section>
+
+    <!-- File Preview -->
+    <section class="preview-section hidden" id="preview-section">
+      <div class="preview-card" id="preview-card">
+        <div class="preview-header">
+          <div class="preview-type-icon" id="preview-type-icon">📄</div>
+          <div class="preview-info">
+            <p class="preview-name" id="preview-name">filename.jpg</p>
+            <p class="preview-meta" id="preview-meta">2.4 MB</p>
+          </div>
+          <button class="remove-btn" id="preview-remove" title="Remove file">✕</button>
+        </div>
+        <div class="preview-img-wrap hidden" id="preview-img-wrap">
+          <img id="preview-img" class="preview-img" alt="Preview" />
+        </div>
+      </div>
+
+      <button class="convert-btn" id="convert-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Convert to PDF
+      </button>
+    </section>
+
+    <!-- Progress -->
+    <section class="progress-section hidden" id="progress-section">
+      <div class="progress-card">
+        <div class="spinner-wrap">
+          <svg class="spinner" viewBox="0 0 50 50">
+            <circle class="spinner-track" cx="25" cy="25" r="20" fill="none" stroke-width="4"/>
+            <circle class="spinner-fill" cx="25" cy="25" r="20" fill="none" stroke-width="4" stroke-dasharray="80 120"/>
+          </svg>
+        </div>
+        <p class="progress-label" id="progress-label">Uploading...</p>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <p class="progress-pct" id="progress-pct">0%</p>
+      </div>
+    </section>
+
+    <!-- Success -->
+    <section class="success-section hidden" id="success-section">
+      <div class="success-card">
+        <div class="success-check">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <h2 class="success-title">Your PDF is ready!</h2>
+        <p class="success-meta" id="success-meta">Converted in 1.2s</p>
+
+        <button class="download-btn" id="download-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF
+        </button>
+
+        <div class="success-actions">
+          <button class="action-link" id="convert-another-btn">Convert Another File</button>
+          <a href="index.html" class="action-link">Back to Tools</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Info Steps -->
+    <section class="steps-section" id="steps-section">
+      <div class="step">
+        <div class="step-num">1</div>
+        <p>Select your file</p>
+      </div>
+      <div class="step-divider">→</div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <p>Click Convert</p>
+      </div>
+      <div class="step-divider">→</div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <p>Download PDF</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-bottom">
+      &copy; 2026 PDFFlow — Files are deleted immediately after conversion &nbsp;·&nbsp;
+      <a href="index.html">All Tools</a>
+    </div>
+  </footer>
+
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/upload.js"></script>
+  <script src="js/converter.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
