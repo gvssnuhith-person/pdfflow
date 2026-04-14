@@ -39,7 +39,11 @@ async function convertFile(req, res, next) {
     let conversionType;
 
     // Route to the correct conversion service
-    if (IMAGE_EXTENSIONS.has(ext)) {
+    if (req.body.tool === 'pdf2docx' && ext === '.pdf') {
+      const { pdfToDocx } = require('../services/pdfService');
+      conversionType = 'pdf2docx';
+      pdfBuffer = await pdfToDocx(filePath);
+    } else if (IMAGE_EXTENSIONS.has(ext)) {
       conversionType = 'image';
       pdfBuffer = await convertImageToPdf(filePath);
     } else if (DOCX_EXTENSIONS.has(ext)) {
@@ -51,7 +55,7 @@ async function convertFile(req, res, next) {
     } else {
       return res.status(400).json({
         success: false,
-        error: `Unsupported file type: ${ext}. Supported formats: images (JPG, PNG, WebP, TIFF, BMP, GIF), documents (DOCX), text (TXT, CSV).`,
+        error: `Unsupported file type: ${ext} for tool ${req.body.tool || 'convert'}.`,
       });
     }
 
@@ -59,7 +63,7 @@ async function convertFile(req, res, next) {
     const baseName = sanitizeFilename(
       path.basename(originalname, ext)
     );
-    const outputFilename = `${baseName}.pdf`;
+    const outputFilename = conversionType === 'pdf2docx' ? `${baseName}.docx` : `${baseName}.pdf`;
 
     const duration = Date.now() - startTime;
     logger.info(
@@ -69,8 +73,9 @@ async function convertFile(req, res, next) {
     );
 
     // Send PDF as downloadable response
+    // Send downloadable response
     res.set({
-      'Content-Type': 'application/pdf',
+      'Content-Type': conversionType === 'pdf2docx' ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'application/pdf',
       'Content-Disposition': `attachment; filename="${outputFilename}"`,
       'Content-Length': pdfBuffer.length,
       'X-Conversion-Type': conversionType,

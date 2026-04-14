@@ -49,6 +49,44 @@ const TOOLS = {
             'application/msword','text/plain','text/csv'],
     exts: ['.jpg','.jpeg','.png','.webp','.tiff','.tif','.bmp','.gif','.docx','.doc','.txt','.csv'],
     hint: 'Images, Word documents, and text files',
+    processLocal: true,
+  },
+  pdf2docx: {
+    title: 'PDF to Word',
+    sub: 'Extract text from PDF and convert it to a Word document',
+    icon: '📘',
+    badge: 'PDF Converter',
+    accept: '.pdf',
+    formats: ['PDF'],
+    mimes: ['application/pdf'],
+    exts: ['.pdf'],
+    hint: 'PDF files (Extracts raw text only)',
+    processLocal: false,
+  },
+  split: {
+    title: 'Split PDF',
+    sub: 'Separate one page or a whole set for easy conversion',
+    icon: '✂️',
+    badge: 'PDF Tool',
+    accept: '.pdf',
+    formats: ['PDF'],
+    mimes: ['application/pdf'],
+    exts: ['.pdf'],
+    hint: 'Select a PDF to split',
+    processLocal: true, // Entirely in-browser! No size limits.
+  },
+  merge: {
+    title: 'Merge PDF',
+    sub: 'Combine PDFs in the order you want',
+    icon: '🔗',
+    badge: 'PDF Tool',
+    accept: '.pdf',
+    formats: ['PDF'],
+    mimes: ['application/pdf'],
+    exts: ['.pdf'],
+    hint: 'Select PDFs to merge together',
+    processLocal: true, // Entirely in-browser! No size limits.
+    multi: true, // Allows multiple file selection
   },
 };
 

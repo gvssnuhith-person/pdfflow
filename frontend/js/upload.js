@@ -2,7 +2,7 @@
    PDFFlow — Upload Handler
    ============================================ */
 
-let _selectedFile = null;
+let _selectedFiles = [];
 
 function initUpload(tool) {
   const zone = $('upload-zone');
@@ -12,6 +12,7 @@ function initUpload(tool) {
 
   // Set accepted types from tool
   if (tool) input.setAttribute('accept', tool.accept);
+  if (tool && tool.multi) input.setAttribute('multiple', 'true');
 
   // Drag & Drop
   zone.addEventListener('dragenter', e => { e.preventDefault(); zone.classList.add('drag-over'); });
@@ -20,13 +21,14 @@ function initUpload(tool) {
   zone.addEventListener('drop', e => {
     e.preventDefault();
     zone.classList.remove('drag-over');
-    const f = e.dataTransfer.files[0];
-    if (f) handleFile(f, tool);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) handleFiles(files, tool);
   });
 
   // Click → open picker
   input.addEventListener('change', e => {
-    if (e.target.files[0]) handleFile(e.target.files[0], tool);
+    const files = Array.from(e.target.files);
+    if (files.length > 0) handleFiles(files, tool);
   });
 
   // Keyboard
@@ -44,34 +46,66 @@ function initUpload(tool) {
   if (removeBtn) removeBtn.addEventListener('click', resetUpload);
 }
 
-function handleFile(file, tool) {
-  const v = validateFile(file, tool);
-  if (!v.valid) { showToast(v.error, 'error'); return; }
+function handleFiles(files, tool) {
+  _selectedFiles = [];
 
-  _selectedFile = file;
-
-  // Update preview
-  const cat = getFileCategory(file);
-  const iconEl = $('preview-type-icon');
-  if (iconEl) iconEl.textContent = CATEGORY_ICONS[cat] || '📄';
-
-  const nameEl = $('preview-name');
-  if (nameEl) nameEl.textContent = file.name;
-
-  const metaEl = $('preview-meta');
-  if (metaEl) metaEl.textContent = `${formatFileSize(file.size)} · ${cat.charAt(0).toUpperCase() + cat.slice(1)}`;
-
-  // Image preview
-  const imgWrap = $('preview-img-wrap');
-  const imgEl   = $('preview-img');
-  if (cat === 'image' && imgWrap && imgEl) {
-    imgWrap.classList.remove('hidden');
-    const reader = new FileReader();
-    reader.onload = e => { imgEl.src = e.target.result; };
-    reader.readAsDataURL(file);
-  } else if (imgWrap) {
-    imgWrap.classList.add('hidden');
+  // Enforce single vs multi
+  let filesToProcess = files;
+  if (!tool || !tool.multi) {
+    if (files.length > 1) showToast('Only one file allowed for this tool. First file selected.', 'info');
+    filesToProcess = [files[0]];
   }
+
+  // Validate all
+  for (const f of filesToProcess) {
+    const v = validateFile(f, tool);
+    if (!v.valid) {
+      showToast(`${f.name}: ${v.error}`, 'error');
+      continue;
+    }
+    _selectedFiles.push(f);
+  }
+
+  if (_selectedFiles.length === 0) return;
+
+  // Clear previous previews
+  const previewSection = $('preview-section');
+  const existingCards = previewSection.querySelectorAll('.preview-card');
+  existingCards.forEach((c, idx) => { if (idx > 0) c.remove(); }); // Keep template
+
+  const templateCard = existingCards[0];
+  
+  _selectedFiles.forEach((file, index) => {
+    let card = templateCard;
+    if (index > 0) {
+      card = templateCard.cloneNode(true);
+      previewSection.insertBefore(card, $('convert-btn'));
+    }
+    
+    card.classList.remove('hidden');
+
+    const cat = getFileCategory(file);
+    const iconEl = card.querySelector('#preview-type-icon') || card.querySelector('.preview-type-icon');
+    if (iconEl) iconEl.textContent = CATEGORY_ICONS[cat] || '📄';
+
+    const nameEl = card.querySelector('#preview-name') || card.querySelector('.preview-name');
+    if (nameEl) nameEl.textContent = file.name;
+
+    const metaEl = card.querySelector('#preview-meta') || card.querySelector('.preview-meta');
+    if (metaEl) metaEl.textContent = `${formatFileSize(file.size)} · ${cat.charAt(0).toUpperCase() + cat.slice(1)}`;
+
+    const imgWrap = card.querySelector('#preview-img-wrap') || card.querySelector('.preview-img-wrap');
+    const imgEl   = card.querySelector('#preview-img') || card.querySelector('.preview-img');
+    
+    if (cat === 'image' && imgWrap && imgEl) {
+      imgWrap.classList.remove('hidden');
+      const reader = new FileReader();
+      reader.onload = e => { imgEl.src = e.target.result; };
+      reader.readAsDataURL(file);
+    } else if (imgWrap) {
+      imgWrap.classList.add('hidden');
+    }
+  });
 
   // Show preview section, enable button
   showEl('preview-section');
@@ -79,11 +113,11 @@ function handleFile(file, tool) {
   const btn = $('convert-btn');
   if (btn) btn.disabled = false;
 
-  showToast(`${file.name} — ready to convert`, 'success', 2500);
+  showToast(`${_selectedFiles.length} file(s) ready`, 'success', 2500);
 }
 
 function resetUpload() {
-  _selectedFile = null;
+  _selectedFiles = [];
   const input = $('file-input');
   if (input) input.value = '';
   showEl('upload-section');
@@ -92,10 +126,13 @@ function resetUpload() {
   hideEl('success-section');
   const btn = $('convert-btn');
   if (btn) btn.disabled = true;
-  const imgEl = $('preview-img');
-  if (imgEl) imgEl.src = '';
-  const imgWrap = $('preview-img-wrap');
-  if (imgWrap) imgWrap.classList.add('hidden');
+  
+  // Clean up extra cards
+  const previewSection = $('preview-section');
+  if (previewSection) {
+    const existingCards = previewSection.querySelectorAll('.preview-card');
+    existingCards.forEach((c, idx) => { if (idx > 0) c.remove(); });
+  }
 }
 
-function getSelectedFile() { return _selectedFile; }
+function getSelectedFiles() { return _selectedFiles; }

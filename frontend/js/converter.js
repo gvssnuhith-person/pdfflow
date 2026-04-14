@@ -6,18 +6,34 @@ let _pdfBlob = null;
 let _pdfFilename = null;
 
 async function convertToPdf() {
-  const file = getSelectedFile();
-  if (!file) { showToast('No file selected.', 'error'); return; }
+  const files = getSelectedFiles();
+  if (!files || files.length === 0) { showToast('No file selected.', 'error'); return; }
 
+  const tool = CONFIG.currentTool;
   const t0 = Date.now();
+  
   hideEl('preview-section');
   showEl('progress-section');
-  setProgress(0, 'Uploading...');
+  setProgress(0, tool.processLocal ? 'Processing in browser...' : 'Uploading...');
 
   try {
-    const fd = new FormData();
-    fd.append('file', file);
-    const result = await xhrUpload(fd);
+    let result;
+    
+    if (tool.processLocal) {
+      // ── Client-side ──
+      // Bypasses the 4.5MB Vercel upload limit completely!
+      setProgress(50, 'Converting locally...');
+      result = await processClientSide(tool.title === 'Image to PDF' || tool.title === 'Any File to PDF' ? 'img2pdf' : (tool.title === 'Split PDF' ? 'split' : 'merge'), files);
+      setProgress(100, 'Done!');
+    } else {
+      // ── Server-side ──
+      const fd = new FormData();
+      // Pass tool type to backend too
+      fd.append('tool', tool.title === 'PDF to Word' ? 'pdf2docx' : 'convert');
+      fd.append('file', files[0]);
+      result = await xhrUpload(fd);
+    }
+    
     _pdfBlob = result.blob;
     _pdfFilename = result.filename;
 
@@ -58,24 +74,29 @@ function xhrUpload(formData) {
       if (xhr.status >= 200 && xhr.status < 300) {
         // ── Extract filename ──
         const disp = xhr.getResponseHeader('Content-Disposition') || '';
-        let filename = 'converted.pdf';
+        let filename = formData.get('tool') === 'pdf2docx' ? 'extracted.docx' : 'converted.pdf';
         const m = disp.match(/filename="?([^";\n]+)"?/);
         if (m) filename = m[1].trim();
 
-        // ── Force PDF MIME type ──
-        const blob = new Blob([xhr.response], { type: 'application/pdf' });
+        const ext = filename.split('.').pop().toLowerCase();
+        let mime = 'application/pdf';
+        if (ext === 'docx') mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        if (ext === 'zip') mime = 'application/zip';
 
-        // ── Validate: first 4 bytes must be %PDF ──
-        const fr = new FileReader();
-        fr.onload = ev => {
-          const h = new Uint8Array(ev.target.result);
-          if (h[0]===0x25 && h[1]===0x50 && h[2]===0x44 && h[3]===0x46) {
-            resolve({ blob, filename });
-          } else {
-            reject(new Error('Conversion failed — the server returned invalid data. Please try again.'));
-          }
-        };
-        fr.readAsArrayBuffer(blob.slice(0, 4));
+        const blob = new Blob([xhr.response], { type: mime });
+
+        if (mime === 'application/pdf') {
+          // ── Validate: first 4 bytes must be %PDF ──
+          const fr = new FileReader();
+          fr.onload = ev => {
+            const h = new Uint8Array(ev.target.result);
+            if (h[0]===0x25 && h[1]===0x50 && h[2]===0x44 && h[3]===0x46) resolve({ blob, filename });
+            else reject(new Error('Conversion failed — the server returned invalid data. Please try again.'));
+          };
+          fr.readAsArrayBuffer(blob.slice(0, 4));
+        } else {
+          resolve({ blob, filename }); // Accept docx/zip directly
+        }
 
       } else {
         // ── Read error message from response ──
@@ -114,13 +135,12 @@ function setProgress(pct, label) {
 }
 
 function downloadPdf() {
-  if (!_pdfBlob) { showToast('No PDF ready.', 'error'); return; }
+  if (!_pdfBlob) { showToast('No file ready.', 'error'); return; }
 
-  const safeBlob = new Blob([_pdfBlob], { type: 'application/pdf' });
-  const url = URL.createObjectURL(safeBlob);
+  const url = URL.createObjectURL(_pdfBlob);
   const a   = document.createElement('a');
   a.href    = url;
-  a.download = (_pdfFilename || 'converted.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
+  a.download = _pdfFilename || 'download';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
